@@ -7,6 +7,7 @@
             var disp = new Display();
             disp.Initialize();
             disp.TurnOn();
+            disp.SetRedScreen();
         }
     }
 }

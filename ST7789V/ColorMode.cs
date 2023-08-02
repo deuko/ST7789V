@@ -2,8 +2,8 @@
 {
     public enum ColorMode
     {
-        Mode444 = 444,
-        Mode565 = 565,
-        Mode666 = 666
+        Mode444,
+        Mode565,
+        Mode666
     }
 }

@@ -23,6 +23,8 @@ namespace ST7789V
 
             _colorMode = color;
 
+            SetColorMode(_colorMode);
+
             _isInitialized = true;
         }
 
@@ -38,11 +40,69 @@ namespace ST7789V
             SendCommand(Command.SLPIN);
         }
 
-        public void SendCommand(Command command)
+        private void SendCommand(Command command)
         {
-            var commandId = Convert.ToByte(command.ID, 16);
-            _device.WriteByte(commandId);
+            var commandBytes = Convert.ToByte(command.ID, 16);
+            _device.WriteByte(commandBytes);
+        }
+
+        public void SendCommand(Command command, int data)
+        {
+            var commandBytes = Convert.ToByte(command.ID, 16);
+            var dataBytes = Convert.ToByte(data);
+
+            _device.WriteByte(commandBytes);
+            _device.WriteByte(dataBytes);
             var x = 2;
+        }
+
+        private void SetColorMode(ColorMode colorMode)
+        {
+            int commandBytes = 0;
+            switch (colorMode)
+            {
+                case ColorMode.Mode444:
+                commandBytes = Convert.ToByte("0x03", 16);
+                break;
+                case ColorMode.Mode565:
+                commandBytes = Convert.ToByte("0x05", 16);
+                break;
+                case ColorMode.Mode666:
+                commandBytes = Convert.ToByte("0x06", 16);
+                break;
+            }
+
+            SendCommand(Command.COLMOD, commandBytes);
+        }
+
+        private void WriteRgb((byte, byte, byte)[] rgb)
+        {
+            var commandBytes = Convert.ToByte(Command.RAMWR.ID, 16);
+            var bytes = new byte[rgb.Length*3];
+
+            for (int i = 0; i < rgb.Length; i++)
+            {
+                bytes[i] = rgb[i].Item1;
+                bytes[i+1] = rgb[i].Item2;
+                bytes[i+2] = rgb[i].Item3;
+            }
+
+            // https://github.com/dotnet/iot/issues/997
+            var dataBytes = new Span<byte>(bytes);
+
+            _device.WriteByte(commandBytes);
+            _device.Write(dataBytes);
+        }
+
+        public void SetRedScreen()
+        {
+            var rgb = new (byte, byte, byte)[320*240];
+            for (int i = 0; i < rgb.Length; i++)
+            {
+                rgb[i] = (30, 0, 0);
+            }
+
+            WriteRgb(rgb);
         }
 
         public void SendRawCommand()
